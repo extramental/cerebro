@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Extramental</title>
+        <link href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,600,800,800italic,700italic,700,300italic,400italic,600italic" rel="stylesheet" type="text/css">
+        % for url in webassets(request, "css/*.less", output="css/style.css", \
+                               filters="less"):
+        <link rel="stylesheet" href="${url}">
+        % endfor
+    </head>
+    <body>
+        <section>
+            <h1>Recipe Book</h1>
+            <p>Here are some recipes.</p>
+            <section>
+                <h1>Breads</h1>
+                <section>
+                    <h1>French Baguette</h1>
+                    <ul>
+                        <li>Flour</li>
+                    </ul>
+                </section>
+            </section>
+        </section>
+    </body>
+</html>
