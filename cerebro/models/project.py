@@ -37,9 +37,10 @@ class Project(Base, IdMixin):
         """
         q = DBSession.query(
             TreeRevision.project_id,
-            func.all_docs_and_revs_for_tree(TreeRevision.tree,
-                                            cast(array(path, type_=Integer), ARRAY(Integer)),
-                                            type_=DocRev).label("r")) \
+            func.all_docs_and_revs_for_tree(func.subtree_at_path(TreeRevision.tree,
+                                                                 cast(array(path, type_=Integer), ARRAY(Integer)),
+                                                                 type_=Json),
+                                            type_=DocRev).label("doc_revs")) \
         .filter(and_(
             TreeRevision.project_id == self.id,
             TreeRevision.tree_rev == tree_rev
@@ -47,9 +48,9 @@ class Project(Base, IdMixin):
 
         return DBSession.query(DocRevision).select_from(q).filter(
             DocRevision.project_id == self.id,
-            DocRevision.doc_id == q.c.r.doc_id,
+            DocRevision.doc_id == q.c.doc_revs.doc_id,
             ((DocRevision.doc_rev == None) & not_(DocRevision.frozen)) |
-                (DocRevision.doc_rev == q.c.r.doc_rev))
+                (DocRevision.doc_rev == q.c.doc_revs.doc_rev))
 
 class ProjectACLEntry(Base):
     __tablename__ = "project_acl"

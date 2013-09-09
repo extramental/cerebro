@@ -43,8 +43,9 @@ CREATE SCHEMA public;
 CREATE EXTENSION IF NOT EXISTS plv8;
 
 CREATE TYPE doc_rev AS (doc_id integer, doc_rev integer);
-CREATE FUNCTION all_docs_and_revs_for_tree (j json, path integer array)
-    RETURNS SETOF doc_rev
+
+CREATE FUNCTION subtree_at_path (j json, path integer array)
+    RETURNS json
     LANGUAGE plv8
     IMMUTABLE
 AS
@@ -55,6 +56,15 @@ $$
         j = j.c[path.shift()];
     }
 
+    return j;
+$$;
+
+CREATE FUNCTION all_docs_and_revs_for_tree (j json)
+    RETURNS SETOF doc_rev
+    LANGUAGE plv8
+    IMMUTABLE
+AS
+$$
     var q = [j];
     var acc = [];
 
