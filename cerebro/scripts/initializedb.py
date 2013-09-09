@@ -16,6 +16,9 @@ from ..models import (
     Base,
     )
 
+from ..models.project import *
+from ..models.auth import *
+
 
 def usage(argv):
     cmd = os.path.basename(argv[0])
@@ -83,5 +86,15 @@ $$
 $$;
 """)
     Base.metadata.create_all(engine)
+
     with transaction.manager:
-        pass
+        print("Sample data!")
+
+        test_user = User(name="test", email="test@example.com", pwhash="...")
+        DBSession.add(test_user)
+
+        test_project = Project(name="test-project", title="Test Project", owner=test_user)
+        DBSession.add(test_project)
+
+        test_tree = TreeRevision(project=test_project, tree_rev=-1, tree={})
+    DBSession.expunge_all()

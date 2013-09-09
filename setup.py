@@ -18,7 +18,8 @@ requires = [
     "mako",
     "pyramid_webassets",
     "html5lib",
-    "lxml"
+    "lxml",
+    "pytz"
     ]
 
 setup(name="cerebro",

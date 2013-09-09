@@ -1,11 +1,10 @@
-import transaction
-
 from sqlalchemy import *
 from sqlalchemy.dialects.postgresql import *
 from sqlalchemy.sql.expression import *
 from sqlalchemy.orm import *
 
 from . import *
+
 
 DocRev = PGCompositeType({
     "doc_id": Integer,
@@ -30,27 +29,6 @@ class Project(Base, IdMixin):
               unique=True),
     )
 
-    def get_doc_revs(self, tree_rev=-1, path=()):
-        """
-        Get all the document content at a given path for a given tree revision.
-        If the tree revision is omitted, then the latest tree is retrieved.
-        """
-        q = DBSession.query(
-            TreeRevision.project_id,
-            func.all_docs_and_revs_for_tree(func.subtree_at_path(TreeRevision.tree,
-                                                                 cast(array(path, type_=Integer), ARRAY(Integer)),
-                                                                 type_=Json),
-                                            type_=DocRev).label("doc_revs")) \
-        .filter(and_(
-            TreeRevision.project_id == self.id,
-            TreeRevision.tree_rev == tree_rev
-        )).subquery()
-
-        return DBSession.query(DocRevision).select_from(q).filter(
-            DocRevision.project_id == self.id,
-            DocRevision.doc_id == q.c.doc_revs.doc_id,
-            ((DocRevision.doc_rev == None) & not_(DocRevision.frozen)) |
-                (DocRevision.doc_rev == q.c.doc_revs.doc_rev))
 
 class ProjectACLEntry(Base):
     __tablename__ = "project_acl"
@@ -106,13 +84,48 @@ class TreeRevision(Base):
 
     tree_rev = Column(Integer, nullable=False)
 
-    ts = Column(DateTime, nullable=False)
+    ts = Column(DateTime, nullable=False,
+                default=func.now().op("AT TIME ZONE")("UTC"))
 
-    tree = Column(Json, nullable=False)
+    tree = Column(PGJson, nullable=False)
 
     __table_args__ = (
         PrimaryKeyConstraint(project_id, tree_rev),
     )
+
+    def _get_subtree_at_path(self, path):
+        """
+        Create a query to get a subtree at a given path.
+        """
+        return DBSession.query(func.subtree_at_path(TreeRevision.tree,
+                                                    cast(array(path, type_=Integer), ARRAY(Integer)),
+                                                    type_=PGJson)) \
+        .filter(and_(
+            TreeRevision.project_id == self.project_id,
+            TreeRevision.tree_rev == self.tree_rev
+        ))
+
+    def get_subtree_at_path(self, path=()):
+        """
+        Get the scalar value of a subtree at a path.
+        """
+        return self._get_subtree_at_path(path).scalar()
+
+    def get_doc_revs(self, path=()):
+        """
+        Get all the document content at a given path for a given tree revision.
+        If the tree revision is omitted, then the latest tree is retrieved.
+        """
+        q = DBSession.query(
+            func.all_docs_and_revs_for_tree(self._get_subtree_at_path(path).as_scalar(),
+                                            type_=DocRev).label("doc_revs")) \
+        .subquery()
+
+        return DBSession.query(DocRevision).select_from(q).filter(
+            DocRevision.project_id == self.project_id,
+            DocRevision.doc_id == q.c.doc_revs.doc_id,
+            ((DocRevision.doc_rev == None) & not_(DocRevision.frozen)) |
+                (DocRevision.doc_rev == q.c.doc_revs.doc_rev))
 
 
 class DocRevision(Base):

@@ -1,3 +1,5 @@
+import json
+
 from sqlalchemy import Table, MetaData, Column, Integer
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.ext.declarative import declarative_base
@@ -35,9 +37,28 @@ class IdMixin(object):
             return None
 
 
-class Json(UserDefinedType):
+class PGJson(UserDefinedType):
+    def __init__(self, encoding="utf-8"):
+        self.encoding = encoding
+
     def get_col_spec(self):
-        return "JSON"
+        return "json"
+
+    def bind_processor(self, dialect):
+        def process(value):
+            if isinstance(value, str) or value is None:
+                return value
+            else:
+                return json.dumps(value, encoding=self.encoding)
+        return process
+
+    def result_processor(self, dialect, coltype):
+        def process(value):
+            if value is not None and isinstance(value, str):
+                return json.loads(value)
+            else:
+                return value
+        return process
 
 
 class PGCompositeElement(ColumnElement):
