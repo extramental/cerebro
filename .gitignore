@@ -37,3 +37,4 @@ nosetests.xml
 
 cerebro/static/.webassets-cache
 cerebro/static/style.css
+cerebro/static/main.js

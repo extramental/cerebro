@@ -1,6 +1,6 @@
 from pyramid.config import Configurator
 from sqlalchemy import engine_from_config
-from webassets import Bundle
+from pyramid_beaker import session_factory_from_settings
 
 from .models import (
     DBSession,
@@ -16,6 +16,10 @@ def main(global_config, **settings):
     Base.metadata.bind = engine
 
     config = Configurator(settings=settings)
+
+    session_factory = session_factory_from_settings(settings)
+    config.set_session_factory(session_factory)
+
     config.add_static_view("static", "static", cache_max_age=3600)
     config.scan()
 

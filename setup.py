@@ -19,7 +19,8 @@ requires = [
     "pyramid_webassets",
     "html5lib",
     "lxml",
-    "pytz"
+    "pytz",
+    "pyramid_beaker"
     ]
 
 setup(name="cerebro",

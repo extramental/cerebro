@@ -3,7 +3,7 @@
     <head>
         <title>Extramental</title>
         <link href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,600,800,800italic,700italic,700,300italic,400italic,600italic" rel="stylesheet" type="text/css">
-        % for url in webassets(request, "css/*.less", output="css/style.css", \
+        % for url in webassets(request, "css/*.less", output="style.css", \
                                filters="less"):
         <link rel="stylesheet" href="${url}">
         % endfor
@@ -22,5 +22,9 @@
                 </section>
             </section>
         </section>
+        % for url in webassets(request, "js/*.js", output="main.js", \
+                               filters="uglifyjs"):
+        <script src="${url}"></script>
+        % endfor
     </body>
 </html>
