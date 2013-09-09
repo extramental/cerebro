@@ -1,6 +1,6 @@
 import json
 
-from sqlalchemy import Table, MetaData, Column, Integer
+from sqlalchemy import Table, MetaData, Column, Integer, DateTime
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.compiler import compiles
@@ -15,6 +15,9 @@ from sqlalchemy.orm import (
 from sqlalchemy.types import UserDefinedType
 
 from zope.sqlalchemy import ZopeTransactionExtension
+
+from datetime import datetime
+import pytz
 
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
@@ -35,6 +38,11 @@ class IdMixin(object):
             return DBSession.query(cls).filter(cls.id == id).one()
         except (NoResultFound, MultipleResultsFound):
             return None
+
+
+class TimestampMixin(object):
+    ts = Column(DateTime, nullable=False,
+                default=lambda: datetime.now(pytz.utc))
 
 
 class PGJson(UserDefinedType):

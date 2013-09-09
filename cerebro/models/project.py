@@ -5,13 +5,11 @@ from sqlalchemy.orm import *
 
 from . import *
 
-from datetime import datetime
-import pytz
-
 DocRev = PGCompositeType({
     "doc_id": Integer,
     "doc_rev": Integer
 })
+
 
 class Project(Base, IdMixin):
     __tablename__ = "projects"
@@ -56,7 +54,7 @@ class ProjectACLEntry(Base):
     )
 
 
-class TreeRevision(Base):
+class TreeRevision(Base, TimestampMixin):
     """
     A tree revision is a snapshot of a project at a given moment in time.
     When a snapshot is taken by the user, these things occur:
@@ -85,9 +83,6 @@ class TreeRevision(Base):
     project = relationship("Project", backref="tree_revisions")
 
     tree_rev = Column(Integer, nullable=False)
-
-    ts = Column(DateTime, nullable=False,
-                default=lambda: datetime.now(pytz.utc))
 
     tree = Column(PGJson, nullable=False)
 
@@ -130,7 +125,7 @@ class TreeRevision(Base):
                 (DocRevision.doc_rev == q.c.doc_revs.doc_rev))
 
 
-class DocRevision(Base):
+class DocRevision(Base, TimestampMixin):
     """
     A doc revision is a snapshot of a document at a given moment in time.
     Similar to a tree revision, it is created when a snapshot is taken and made
