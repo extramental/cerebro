@@ -5,6 +5,8 @@ from sqlalchemy.orm import *
 
 from . import *
 
+from datetime import datetime
+import pytz
 
 DocRev = PGCompositeType({
     "doc_id": Integer,
@@ -85,7 +87,7 @@ class TreeRevision(Base):
     tree_rev = Column(Integer, nullable=False)
 
     ts = Column(DateTime, nullable=False,
-                default=func.now().op("AT TIME ZONE")("UTC"))
+                default=lambda: datetime.now(pytz.utc))
 
     tree = Column(PGJson, nullable=False)
 
