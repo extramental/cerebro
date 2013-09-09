@@ -17,6 +17,8 @@ requires = [
     "psycopg2",
     "mako",
     "pyramid_webassets",
+    "html5lib",
+    "lxml"
     ]
 
 setup(name="cerebro",
