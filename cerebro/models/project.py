@@ -1,11 +1,16 @@
 import transaction
 
 from sqlalchemy import *
+from sqlalchemy.dialects.postgresql import *
 from sqlalchemy.sql.expression import *
 from sqlalchemy.orm import *
 
-from . import Base, IdMixin, Json, DBSession
+from . import *
 
+DocRev = PGCompositeType({
+    "doc_id": Integer,
+    "doc_rev": Integer
+})
 
 class Project(Base, IdMixin):
     __tablename__ = "projects"
@@ -25,37 +30,26 @@ class Project(Base, IdMixin):
               unique=True),
     )
 
-    def get_doc_revs(self, tree_rev=-1, path=""):
+    def get_doc_revs(self, tree_rev=-1, path=()):
         """
         Get all the document content at a given path for a given tree revision.
         If the tree revision is omitted, then the latest tree is retrieved.
         """
-        with transaction.manager:
-            # yikes.
-            return DBSession.connection().execute(text("""
-                SELECT q.tree_rev AS tree_rev,
-                       (q.r).doc_id AS doc_id,
-                       (q.r).doc_rev AS doc_rev,
-                       doc_revisions.content AS content
-                FROM (SELECT project_id,
-                             tree_rev,
-                             all_docs_and_revs_for_tree(tree, :path) AS r
-                      FROM tree_revisions
-                      WHERE project_id = :project_id AND
-                            tree_rev = :tree_rev) as q,
-                      doc_revisions
-                WHERE doc_revisions.project_id = :project_id AND
-                      doc_revisions.doc_id = doc_id AND
-                      ((doc_revisions.doc_rev IS NULL AND
-                        NOT doc_revisions."frozen") OR
-                        doc_revisions.doc_rev = doc_rev)
-            """, typemap={
-                "tree_rev":     Integer,
-                "doc_id":       Integer,
-                "doc_rev":      Integer,
-                "content":      Text
-            }), tree_rev=tree_rev, path=path, project_id=self.id)
+        q = DBSession.query(
+            TreeRevision.project_id,
+            func.all_docs_and_revs_for_tree(TreeRevision.tree,
+                                            cast(array(path, type_=Integer), ARRAY(Integer)),
+                                            type_=DocRev).label("r")) \
+        .filter(and_(
+            TreeRevision.project_id == self.id,
+            TreeRevision.tree_rev == tree_rev
+        )).subquery()
 
+        return DBSession.query(DocRevision).select_from(q).filter(
+            DocRevision.project_id == self.id,
+            DocRevision.doc_id == q.c.r.doc_id,
+            ((DocRevision.doc_rev == None) & not_(DocRevision.frozen)) |
+                (DocRevision.doc_rev == q.c.r.doc_rev))
 
 class ProjectACLEntry(Base):
     __tablename__ = "project_acl"

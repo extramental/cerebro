@@ -43,13 +43,13 @@ CREATE SCHEMA public;
 CREATE EXTENSION IF NOT EXISTS plv8;
 
 CREATE TYPE doc_rev AS (doc_id integer, doc_rev integer);
-CREATE FUNCTION all_docs_and_revs_for_tree (j json, path varchar)
+CREATE FUNCTION all_docs_and_revs_for_tree (j json, path integer array)
     RETURNS SETOF doc_rev
     LANGUAGE plv8
     IMMUTABLE
 AS
 $$
-    path = path.length == 0 ? [] : path.split("/");
+    path = path.slice();
 
     while (path.length > 0) {
         j = j.c[path.shift()];

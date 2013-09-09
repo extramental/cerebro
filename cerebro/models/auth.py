@@ -1,6 +1,6 @@
 from sqlalchemy import *
 
-from . import Base, IdMixin
+from . import *
 
 class User(Base, IdMixin):
     __tablename__ = "users"
