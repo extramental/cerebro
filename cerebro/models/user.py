@@ -29,20 +29,18 @@ class User(Base, IdMixin):
         def __init__(self, request):
             self.request = request
 
-        def __getitem__(self, name):
-            user = User.Factory(self.request)[name]
+        def __getitem__(self, user_name):
             from .project import Project
 
             class _Factory(object):
-                __parent__ = user
-
-                def __getitem__(self, name):
+                def __getitem__(self, project_name):
                     o = DBSession.query(Project).filter(
-                        User.id == self.__parent__.id,
-                        Project.name == name
+                        User.name == user_name,
+                        Project.name == project_name,
+                        User.id == Project.owner_id
                     ).first()
                     if o is None:
-                        raise KeyError(id)
+                        raise KeyError(user_name, project_name)
                     return o
 
             return _Factory()
