@@ -21,6 +21,7 @@ requires = [
     "lxml",
     "pytz",
     "pyramid_beaker",
+    "wtforms",
     "neuron"
     ]
 
