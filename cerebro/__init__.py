@@ -1,5 +1,8 @@
 from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.config import Configurator
+from pyramid.path import AssetResolver
+
+from pyramid_webassets import includeme as includeme_pyramid_webassets
 
 from sqlalchemy import engine_from_config
 
@@ -30,6 +33,10 @@ def main(global_config, **settings):
 
     config.set_authentication_policy(DBAuthenticationPolicy())
     config.set_authorization_policy(ACLAuthorizationPolicy())
+
+    # intercept pyramid_webassets settings
+    config.registry.settings["webassets.base_dir"] = AssetResolver().resolve(config.registry.settings["webassets.base_dir"]).abspath()
+    includeme_pyramid_webassets(config)
 
     route(config)
 
