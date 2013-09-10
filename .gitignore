@@ -38,3 +38,5 @@ nosetests.xml
 cerebro/static/.webassets-cache
 cerebro/static/style.css
 cerebro/static/main.js
+cerebro/static/js/bower.json
+cerebro/static/js/bower_components
