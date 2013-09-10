@@ -4,7 +4,5 @@ from pyramid.view import view_config
 
 @view_config(route_name='home', renderer='_layout.html')
 def my_view(request):
-    request.session["test"] = "a"
-    request.session.save()
     return {}
 
