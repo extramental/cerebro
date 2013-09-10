@@ -67,3 +67,5 @@ def cerebro_session_auth_policy_factory(config_file):
                 ProjectACLEntry.READER: READER,
                 ProjectACLEntry.WRITER: WRITER
             }.get(acl.level, DENY)
+
+    return CerebroSessionAuthPolicy
