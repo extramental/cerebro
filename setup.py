@@ -20,7 +20,8 @@ requires = [
     "html5lib",
     "lxml",
     "pytz",
-    "pyramid_beaker"
+    "pyramid_beaker",
+    "neuron"
     ]
 
 setup(name="cerebro",

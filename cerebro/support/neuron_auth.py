@@ -5,10 +5,12 @@ from pyramid.request import Request
 from pyramid_beaker import session_factory_from_settings
 
 from beaker.session import Session
-from cerebro.models import DBSession, Base
 
+from cerebro.models import DBSession, Base
 from cerebro.models.auth import User
-from cerebro.models.project import Project, Doc
+from cerebro.models.project import Project, ProjectACLEntry, Doc
+
+from neuron.auth import DENY, READER, WRITER
 
 from tornado.options import define, options
 
@@ -31,9 +33,6 @@ class CerebroAuthPolicy(object):
         self.session_factory = session_factory_from_settings(settings)
 
     def authenticate(self, request):
-        # TODO: yeah.
-        return 1
-
         session = self.session_factory(Request({
             "HTTP_COOKIE": str(request.cookies)
         }))
@@ -46,11 +45,27 @@ class CerebroAuthPolicy(object):
         return user.id
 
     def authorize(self, doc_id):
-        return True
         doc = Doc.by_id(doc_id)
 
         if doc is None:
-            return False
+            # return the empty set of permissions
+            return DENY
 
-        # TODO: yeah.
-        return True
+        identity = User.by_id(self.user_id)
+
+        # first, check if we're the project owner
+        if doc.owner == identity:
+            return WRITER
+
+        acl = DBSession.query(ProjectACLEntry).filter(
+            ProjectACLEntry.user == identity,
+            ProjectACLEntry.project == doc.project
+        ).first()
+
+        if acl is None:
+            return DENY
+
+        return {
+            ProjectACLEntry.READER: READER,
+            ProjectACLEntry.WRITER: WRITER
+        }.get(acl.level, DENY)

@@ -33,6 +33,9 @@ class Project(Base, IdMixin):
 class ProjectACLEntry(Base):
     __tablename__ = "project_acl"
 
+    READER = 0
+    WRITER = 1
+
     project_id = Column(Integer, ForeignKey("projects.id",
                                             onupdate="cascade",
                                             ondelete="cascade"),
