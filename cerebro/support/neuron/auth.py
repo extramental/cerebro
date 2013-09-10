@@ -7,7 +7,7 @@ from pyramid_beaker import session_factory_from_settings
 from beaker.session import Session
 
 from cerebro.models import DBSession, Base
-from cerebro.models.auth import User
+from cerebro.models.user import User
 from cerebro.models.project import Project, ProjectACLEntry, Doc
 
 from neuron.auth import DENY, READER, WRITER

@@ -42,7 +42,12 @@ def main(global_config, **settings):
 
 
 def route(config):
-    from .models.project import Project
+    from .models.user import User
 
     config.add_route("home_index", "/")
-    config.add_route("project_index", "/projects/{id}", traverse="/{id}", factory=Project.Factory)
+    config.add_route("user_index", "/{user_name}/",
+                     traverse="/{user_name}",
+                     factory=User.Factory)
+    config.add_route("project_index", "/{user_name}/{project_name}",
+                     traverse="/{user_name}/{project_name}",
+                     factory=User.ProjectFactory)

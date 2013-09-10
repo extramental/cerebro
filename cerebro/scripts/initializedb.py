@@ -17,7 +17,7 @@ from ..models import (
     )
 
 from ..models.project import *
-from ..models.auth import *
+from ..models.user import *
 
 
 def usage(argv):

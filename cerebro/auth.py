@@ -6,7 +6,7 @@ from pyramid.interfaces import IAuthenticationPolicy
 from zope.interface import implements
 
 from .models import DBSession
-from .models.auth import User
+from .models.user import User
 
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
