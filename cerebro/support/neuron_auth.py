@@ -15,6 +15,12 @@ from neuron.auth import DENY, READER, WRITER
 from tornado.options import define, options
 
 # XXX: really _really_ fragile!
+#
+#      when neuron parses configuration, it will import this module,
+#      cerebro.support.neuron_auth. when it does, cerebro_config will be a
+#      configurable option which will be defined.
+#
+#      this is not well-defined, but there's not much i can do about it.
 define("cerebro_config", help="cerebro config file to use")
 
 
