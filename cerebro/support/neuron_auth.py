@@ -1,6 +1,6 @@
 from sqlalchemy import engine_from_config
 
-from pyramid.paster import bootstrap
+from pyramid.paster import get_appsettings
 from pyramid.request import Request
 from pyramid_beaker import session_factory_from_settings
 
@@ -14,6 +14,7 @@ from neuron.auth import DENY, READER, WRITER
 
 from tornado.options import define, options
 
+# XXX: really _really_ fragile!
 define("cerebro_config", help="cerebro config file to use")
 
 
@@ -23,8 +24,7 @@ class CerebroAuthPolicy(object):
     application -- instead, Neuron runs this code to perform auth.
     """
     def __init__(self, application):
-        env = bootstrap(options.cerebro_config)
-        settings = env["registry"].settings
+        settings = get_appsettings(options.cerebro_config)
 
         engine = engine_from_config(settings, "sqlalchemy.")
         DBSession.configure(bind=engine)
