@@ -106,7 +106,7 @@
             docRev + 1,
             clients,
             sockAdapter,
-            new ot.CodeMirrorAdapter(cm)
+            new ot.CodeMirrorAdapter(loaded.cm)
         );
     };
 
