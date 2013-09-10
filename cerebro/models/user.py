@@ -33,6 +33,10 @@ class User(Base, IdMixin):
             from .project import Project
 
             class _Factory(object):
+                @property
+                def __parent__(self):
+                    return User.Factory(request)[user_name]
+
                 def __getitem__(self, project_name):
                     o = DBSession.query(Project).filter(
                         User.name == user_name,
