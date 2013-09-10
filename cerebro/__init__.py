@@ -2,8 +2,6 @@ from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.config import Configurator
 from pyramid.path import AssetResolver
 
-from pyramid_webassets import includeme as includeme_pyramid_webassets
-
 from sqlalchemy import engine_from_config
 
 from pyramid_beaker import session_factory_from_settings
@@ -36,7 +34,7 @@ def main(global_config, **settings):
 
     # intercept pyramid_webassets settings
     config.registry.settings["webassets.base_dir"] = AssetResolver().resolve(config.registry.settings["webassets.base_dir"]).abspath()
-    includeme_pyramid_webassets(config)
+    config.include("pyramid_webassets")
 
     route(config)
 
