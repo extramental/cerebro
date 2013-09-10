@@ -2,7 +2,7 @@
 <html>
     <head>
         <title>Extramental</title>
-        <link href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,600,800,800italic,700italic,700,300italic,400italic,600italic" rel="stylesheet" type="text/css">
+        <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,600,800,800italic,700italic,700,300italic,400italic,600italic">
         % for url in webassets(request, \
                                "js/bower_components/codemirror/lib/codemirror.css", \
                                "css/*.less", \

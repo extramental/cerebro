@@ -33,7 +33,6 @@ def main(global_config, **settings):
 
     route(config)
 
-    config.add_renderer(".html", "pyramid.mako_templating.renderer_factory")
     return config.make_wsgi_app()
 
 
