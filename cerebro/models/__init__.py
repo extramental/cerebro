@@ -94,3 +94,8 @@ class PGCompositeType(UserDefinedType):
                 raise KeyError("Type '%s' doesn't have an attribute: '%s'" % (self.type, key))
 
             return PGCompositeElement(self.expr, key, type_)
+
+
+class RootFactory(object):
+    def __init__(self, request):
+        pass

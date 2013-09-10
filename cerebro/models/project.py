@@ -46,6 +46,16 @@ class Project(Base, IdMixin):
 
         return acl
 
+    class Factory(object):
+        def __init__(self, request):
+            self.request = request
+
+        def __getitem__(self, id):
+            o = Project.by_id(id)
+            if o is None:
+                raise KeyError(id)
+            return o
+
 
 class ProjectACLEntry(Base):
     __tablename__ = "project_acl"
@@ -58,7 +68,7 @@ class ProjectACLEntry(Base):
                                             ondelete="cascade"),
                         nullable=False)
 
-    project = relationship("Project", backref="acl")
+    project = relationship("Project", backref=backref("acl", lazy="joined"))
 
     user_id = Column(Integer, ForeignKey("users.id",
                                          onupdate="cascade",

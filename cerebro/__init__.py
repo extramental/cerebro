@@ -8,7 +8,7 @@ from pyramid_beaker import session_factory_from_settings
 
 from .auth import identity_for_request, request_has_permission, \
                   DBAuthenticationPolicy
-from .models import DBSession, Base
+from .models import DBSession, Base, RootFactory
 
 
 def main(global_config, **settings):
@@ -18,7 +18,7 @@ def main(global_config, **settings):
     DBSession.configure(bind=engine)
     Base.metadata.bind = engine
 
-    config = Configurator(settings=settings)
+    config = Configurator(settings=settings, root_factory=RootFactory)
 
     session_factory = session_factory_from_settings(settings)
     config.set_session_factory(session_factory)
@@ -42,4 +42,7 @@ def main(global_config, **settings):
 
 
 def route(config):
-    config.add_route("home", "/")
+    from .models.project import Project
+
+    config.add_route("home_index", "/")
+    config.add_route("project_index", "/projects/{id}", traverse="/{id}", factory=Project.Factory)

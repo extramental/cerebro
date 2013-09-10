@@ -60,7 +60,7 @@ class DBAuthenticationPolicy(object):
     def effective_principals(self, request):
         principals = [Everyone]
 
-        if request.identity_id is None:
+        if request.identity is None:
             return principals
 
         principals.extend([
