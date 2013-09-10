@@ -24,7 +24,7 @@ from tornado.options import define, options
 define("cerebro_config", help="cerebro config file to use")
 
 
-class CerebroAuthPolicy(object):
+class CerebroSessionAuthPolicy(object):
     """
     An auth policy for Neuron. This code does not get called inside the Cerebro
     application -- instead, Neuron runs this code to perform auth.
