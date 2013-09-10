@@ -119,10 +119,29 @@ class TreeRevision(Base, TimestampMixin):
         .subquery()
 
         return DBSession.query(DocRevision).select_from(q).filter(
-            DocRevision.project_id == self.project_id,
             DocRevision.doc_id == q.c.doc_revs.doc_id,
             ((DocRevision.doc_rev == None) & not_(DocRevision.frozen)) |
                 (DocRevision.doc_rev == q.c.doc_revs.doc_rev))
+
+
+class Doc(Base, IdMixin):
+    """
+    A doc is just a table to map document IDs to projects for ACLs to be
+    checked.
+
+    Document IDs are global across the whole system, i.e. all document IDs are
+    associated with exactly one project.
+    """
+    __tablename__ = "docs"
+
+    name = Column(String, nullable=False)
+
+    project_id = Column(Integer, ForeignKey("projects.id",
+                                            onupdate="cascade",
+                                            ondelete="cascade"),
+                        nullable=False)
+
+    project = relationship("Project", backref="docs")
 
 
 class DocRevision(Base, TimestampMixin):
@@ -166,14 +185,12 @@ class DocRevision(Base, TimestampMixin):
     """
     __tablename__ = "doc_revisions"
 
-    project_id = Column(Integer, ForeignKey("projects.id",
-                                            onupdate="cascade",
-                                            ondelete="cascade"),
-                        nullable=False)
+    doc_id = Column(Integer, ForeignKey("docs.id",
+                                        onupdate="cascade",
+                                        ondelete="cascade"),
+                    nullable=False)
 
-    project = relationship("Project", backref="doc_revisions")
-
-    doc_id = Column(Integer, nullable=False)
+    doc = relationship("Doc", backref="doc_revisions")
 
     doc_rev = Column(Integer, nullable=True)
 
@@ -182,7 +199,7 @@ class DocRevision(Base, TimestampMixin):
     frozen = Column(Boolean, nullable=False, default=True)
 
     __table_args__ = (
-        PrimaryKeyConstraint(project_id, doc_id, doc_rev),
-        Index("doc_revision_project_id_doc_id_not_frozen", project_id, doc_id,
-              frozen, postgresql_where=not_(frozen), unique=True),
+        PrimaryKeyConstraint(doc_id, doc_rev),
+        Index("doc_revision_project_id_doc_id_not_frozen", doc_id,frozen,
+              postgresql_where=not_(frozen), unique=True),
     )
