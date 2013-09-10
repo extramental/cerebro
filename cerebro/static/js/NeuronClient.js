@@ -8,24 +8,14 @@
     function NeuronClient(url) {
         var self = this;
 
+        this.url = url;
+
         this.loaded = {};
         this.ready = false;
+        this.reconnecting = false;
 
-        this.sock = new SockJS(url);
-        this.sock.onopen = function (e) {
-            self.ready = true;
-            if (self.onready) self.onready();
-        };
-
-        this.sock.onmessage = function (e) {
-            var payload = JSON.parse(e.data);
-            NeuronClient.opHandlers[payload[0]].apply(self, payload.slice(1));
-        };
-        this.sock.onclose = function () {
-            self.ready = false;
-            console.log("lost connection to neuron.");
-            if (self.onclose) self.onclose();
-        };
+        this.sock = null;
+        this.connect();
     }
 
     var OPS = NeuronClient.OPS = {
@@ -42,14 +32,49 @@
 
     NeuronClient.serializeCursor = function (cursor) {
         return cursor ? cursor.position + "," + cursor.selectionEnd
-                      : null
-                      ;
+                      : null;
     };
 
     NeuronClient.prototype = {
         constructor: NeuronClient,
 
-        loadDocument: function (docId, cm) {
+        connect: function () {
+            var self = this;
+
+            this.sock = new SockJS(this.url);
+            this.sock.onopen = function (e) {
+                self.ready = true;
+                if (self.onready) self.onready();
+
+                if (self.reconnecting) {
+                    for (var k in self.loaded) {
+                        if (!Object.prototype.hasOwnProperty(self.loaded, k)) {
+                            continue;
+                        }
+
+                        if (self.loaded[k].cb !== null) {
+                            self.loaded[k].cb.reconnect();
+                        }
+                    }
+                }
+            };
+
+            this.sock.onmessage = function (e) {
+                var payload = JSON.parse(e.data);
+                NeuronClient.opHandlers[payload[0]].apply(self, payload.slice(1));
+            };
+            this.sock.onclose = function () {
+                self.ready = false;
+                console.log("lost connection to neuron.");
+
+                self.reconnecting = true;
+                //self.connect();
+
+                if (self.onclose) self.onclose();
+            };
+        },
+
+        loadDoc: function (docId, cm) {
             this.sock.send(JSON.stringify([OPS.LOAD, docId]));
             this.loaded[docId] = {
                 cm: cm,
@@ -58,7 +83,7 @@
             };
         },
 
-        unloadDocument: function (docId) {
+        unloadDoc: function (docId) {
             this.sock.send(JSON.stringify([OPS.LEFT, docId]));
             delete this.loaded[docId];
         },
