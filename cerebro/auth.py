@@ -22,7 +22,7 @@ class IdentifiedRequest(Request):
             return None
 
         try:
-            return DBSession.query(Person).filter(Person.id == userid).one()
+            return DBSession.query(User).filter(User.id == userid).one()
         except (NoResultFound, MultipleResultsFound):
             return None
 
@@ -61,7 +61,7 @@ class DBAuthenticationPolicy(object):
     def effective_principals(self, request):
         principals = [Everyone]
 
-        if request.identity_id.is_anonymous:
+        if request.identity_id is None:
             return principals
 
         principals.extend([
