@@ -13,21 +13,20 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from pyramid.security import Everyone, Authenticated, has_permission
 
 
-class IdentifiedRequest(Request):
-    @reify
-    def identity(self):
-        userid = unauthenticated_userid(self)
+def identity_for_request(request):
+    userid = unauthenticated_userid(request)
 
-        if userid is None:
-            return None
+    if userid is None:
+        return None
 
-        try:
-            return DBSession.query(User).filter(User.id == userid).one()
-        except (NoResultFound, MultipleResultsFound):
-            return None
+    try:
+        return DBSession.query(User).filter(User.id == userid).one()
+    except (NoResultFound, MultipleResultsFound):
+        return None
 
-    def has_permission(self, permission, context):
-        return has_permission(permission, context, self)
+
+def request_has_permission(request, permission, context):
+    return has_permission(permission, context, request)
 
 
 class DBAuthenticationPolicy(object):

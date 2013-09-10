@@ -5,7 +5,8 @@ from sqlalchemy import engine_from_config
 
 from pyramid_beaker import session_factory_from_settings
 
-from .auth import IdentifiedRequest, DBAuthenticationPolicy
+from .auth import identity_for_request, request_has_permission, \
+                  DBAuthenticationPolicy
 from .models import DBSession, Base
 
 
@@ -21,7 +22,8 @@ def main(global_config, **settings):
     session_factory = session_factory_from_settings(settings)
     config.set_session_factory(session_factory)
 
-    config.set_request_factory(IdentifiedRequest)
+    config.add_request_method(identity_for_request, "identity", reify=True)
+    config.add_request_method(request_has_permission, "has_permission")
 
     config.add_static_view("static", "static", cache_max_age=3600)
     config.scan()
