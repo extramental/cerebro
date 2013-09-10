@@ -180,6 +180,10 @@ class Doc(Base, IdMixin):
 
     project = relationship("Project", backref="docs")
 
+    @property
+    def __acl__(self):
+        return self.project.__acl__
+
 
 class DocRevision(Base, TimestampMixin):
     """
