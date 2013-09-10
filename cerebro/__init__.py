@@ -1,11 +1,12 @@
+from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.config import Configurator
+
 from sqlalchemy import engine_from_config
+
 from pyramid_beaker import session_factory_from_settings
 
-from .models import (
-    DBSession,
-    Base,
-    )
+from .auth import IdentifiedRequest, DBAuthenticationPolicy
+from .models import DBSession, Base
 
 
 def main(global_config, **settings):
@@ -20,8 +21,13 @@ def main(global_config, **settings):
     session_factory = session_factory_from_settings(settings)
     config.set_session_factory(session_factory)
 
+    config.set_request_factory(IdentifiedRequest)
+
     config.add_static_view("static", "static", cache_max_age=3600)
     config.scan()
+
+    config.set_authentication_policy(DBAuthenticationPolicy())
+    config.set_authorization_policy(ACLAuthorizationPolicy())
 
     route(config)
 

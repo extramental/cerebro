@@ -37,7 +37,7 @@ class CerebroAuthPolicy(object):
             "HTTP_COOKIE": str(request.cookies)
         }))
 
-        user = User.by_id(session.get("user_id", None))
+        user = User.by_id(session.get("identity_id", None))
 
         if user is None:
             return None

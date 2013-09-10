@@ -3,6 +3,8 @@ from sqlalchemy.dialects.postgresql import *
 from sqlalchemy.sql.expression import *
 from sqlalchemy.orm import *
 
+from pyramid.security import Allow, Everyone
+
 from . import *
 
 DocRev = PGCompositeType({
@@ -17,6 +19,8 @@ class Project(Base, IdMixin):
     name = Column(String, nullable=False)
     title = Column(String, nullable=False)
 
+    public = Column(Boolean, nullable=False, default=True)
+
     owner_id = Column(Integer, ForeignKey("users.id",
                                           onupdate="cascade",
                                           ondelete="cascade"),
@@ -28,6 +32,19 @@ class Project(Base, IdMixin):
         Index("project_owner_id_lower_name", owner_id, func.lower(name),
               unique=True),
     )
+
+    @property
+    def __acl__(self):
+        acl = []
+
+        for entry in self.acl:
+            acl.extend([(Allow, "user_id:{}".format(entry.user_id), perm)
+                for perm in entry.permissions])
+
+        if self.public:
+            acl.append((Allow, Everyone, "read"))
+
+        return acl
 
 
 class ProjectACLEntry(Base):
@@ -41,7 +58,7 @@ class ProjectACLEntry(Base):
                                             ondelete="cascade"),
                         nullable=False)
 
-    project = relationship("Project", backref="project_acl")
+    project = relationship("Project", backref="acl")
 
     user_id = Column(Integer, ForeignKey("users.id",
                                          onupdate="cascade",
@@ -55,6 +72,13 @@ class ProjectACLEntry(Base):
     __table_args__ = (
         PrimaryKeyConstraint(project_id, user_id),
     )
+
+    @property
+    def permissions(self):
+        return {
+            ProjectACLEntry.READER: ["read"],
+            ProjectACLEntry.WRITER: ["read", "write"]
+        }.get(self.level, [])
 
 
 class TreeRevision(Base, TimestampMixin):
