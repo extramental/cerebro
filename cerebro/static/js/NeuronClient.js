@@ -40,6 +40,12 @@
 
     NeuronClient.opHandlers = {};
 
+    NeuronClient.serializeCursor = function (cursor) {
+        return cursor ? cursor.position + "," + cursor.selectionEnd
+                      : null
+                      ;
+    };
+
     NeuronClient.prototype = {
         constructor: NeuronClient,
 
@@ -55,6 +61,19 @@
         unloadDocument: function (docId) {
             this.sock.send(JSON.stringify([OPS.LEFT, docId]));
             delete this.loaded[docId];
+        },
+
+        processRawCursor: function (docId, connId, rawCursor) {
+            var cursor = null;
+
+            if (rawCursor !== null) {
+                cursor = rawCursor.split(",");
+                cursor = {
+                    position: parseInt(cursor[0], 10),
+                    selectionEnd: parseInt(cursor[1], 10)
+                };
+            }
+            this.loaded[docId].cb.cursor(connId, cursor);
         }
     };
 
@@ -71,17 +90,11 @@
 
         var sockAdapter = {
             sendOperation: function (docRev, op, cursor) {
-                // TODO: wrap cursor in operation, maybe?
-                self.sock.send(JSON.stringify([OPS.OPERATION, docId, docRev, JSON.stringify(op)]));
-                sockAdapter.sendCursor(cursor);
+                self.sock.send(JSON.stringify([OPS.OPERATION, docId, docRev, JSON.stringify(op), NeuronClient.serializeCursor(cursor)]));
             },
 
             sendCursor: function (cursor) {
-                if (cursor) {
-                    self.sock.send(JSON.stringify([OPS.CURSOR, docId, cursor.position + "," + cursor.selectionEnd]));
-                } else {
-                    self.sock.send(JSON.stringify([OPS.CURSOR, docId, null]));
-                }
+                self.sock.send(JSON.stringify([OPS.CURSOR, docId, NeuronClient.serializeCursor(cursor)]));
             },
 
             registerCallbacks: function (cb) {
@@ -97,32 +110,25 @@
         );
     };
 
-    NeuronClient.opHandlers[OPS.OPERATION] = function (docId, rawOp) {
+    NeuronClient.opHandlers[OPS.OPERATION] = function (docId, connId, rawOp, rawCursor) {
         this.loaded[docId].cb.operation(JSON.parse(rawOp));
+        this.processRawCursor(docId, connId, rawCursor);
     };
 
     NeuronClient.opHandlers[OPS.ACK] = function (docId) {
         this.loaded[docId].cb.ack();
     };
 
-    NeuronClient.opHandlers[OPS.CURSOR] = function (docId, userId, cursor) {
-        if (cursor !== null) {
-            cursor = cursor.split(",");
-            cursor = {
-                position: parseInt(cursor[0], 10),
-                selectionEnd: parseInt(cursor[1], 10)
-            };
-        }
-        this.loaded[docId].cb.cursor(userId, cursor);
+    NeuronClient.opHandlers[OPS.CURSOR] = function (docId, connId, rawCursor) {
+        this.processRawCursor(docId, connId, rawCursor);
     };
 
-
-    NeuronClient.opHandlers[OPS.LEFT] = function (docId, userId) {
-        this.loaded[docId].cb.client_left(userId);
+    NeuronClient.opHandlers[OPS.LEFT] = function (docId, connId) {
+        this.loaded[docId].cb.client_left(connId);
     };
 
-    NeuronClient.opHandlers[OPS.JOIN] = function (docId, userId, name) {
-        this.loaded[docId].cb.set_name(userId, name);
+    NeuronClient.opHandlers[OPS.JOIN] = function (docId, connId, name) {
+        this.loaded[docId].cb.set_name(connId, name);
     };
 
     cerebro.NeuronClient = NeuronClient;
