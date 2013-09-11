@@ -67,7 +67,7 @@ class ProjectACLEntry(Base):
                                             ondelete="cascade"),
                         nullable=False)
 
-    project = relationship("Project", backref=backref("acl"))
+    project = relationship("Project", backref="acl")
 
     user_id = Column(Integer, ForeignKey("users.id",
                                          onupdate="cascade",
