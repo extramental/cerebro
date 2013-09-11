@@ -47,7 +47,7 @@ def route(config):
     config.add_route("home_index", "/")
     config.add_route("user_index", "/{user_name}/",
                      traverse="/{user_name}",
-                     factory=User.Factory)
+                     factory=User.RootFactory)
     config.add_route("project_index", "/{user_name}/{project_name}/",
                      traverse="/{user_name}/{project_name}",
-                     factory=User.ProjectFactory)
+                     factory=User.ProjectRootFactory)

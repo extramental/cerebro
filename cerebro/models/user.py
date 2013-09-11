@@ -14,7 +14,7 @@ class User(Base, IdMixin):
         Index("users_lower_email", func.lower(email), unique=True),
     )
 
-    class Factory(object):
+    class RootFactory(object):
         def __init__(self, request):
             self.request = request
 
@@ -25,7 +25,7 @@ class User(Base, IdMixin):
             return user
 
 
-    class ProjectFactory(object):
+    class ProjectRootFactory(object):
         def __init__(self, request):
             self.request = request
 
