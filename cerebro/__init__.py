@@ -8,7 +8,7 @@ from pyramid_beaker import session_factory_from_settings
 
 from .auth import identity_for_request, request_has_permission, \
                   DBAuthenticationPolicy
-from .models import DBSession, Base, RootFactory
+from .models import DBSession, Base, Root
 
 
 def main(global_config, **settings):
@@ -18,7 +18,7 @@ def main(global_config, **settings):
     DBSession.configure(bind=engine)
     Base.metadata.bind = engine
 
-    config = Configurator(settings=settings, root_factory=RootFactory)
+    config = Configurator(settings=settings, root_factory=Root)
 
     session_factory = session_factory_from_settings(settings)
     config.set_session_factory(session_factory)
@@ -36,18 +36,4 @@ def main(global_config, **settings):
     config.registry.settings["webassets.base_dir"] = AssetResolver().resolve(config.registry.settings["webassets.base_dir"]).abspath()
     config.include("pyramid_webassets")
 
-    route(config)
-
     return config.make_wsgi_app()
-
-
-def route(config):
-    from .models.user import User
-
-    config.add_route("home_index", "/")
-    config.add_route("user_index", "/{user_name}/",
-                     traverse="/{user_name}",
-                     factory=User.RootFactory)
-    config.add_route("project_index", "/{user_name}/{project_name}/",
-                     traverse="/{user_name}/{project_name}",
-                     factory=User.ProjectRootFactory)

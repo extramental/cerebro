@@ -96,6 +96,19 @@ class PGCompositeType(UserDefinedType):
             return PGCompositeElement(self.expr, key, type_)
 
 
-class RootFactory(object):
-    def __init__(self, request):
+class Root(object):
+    __name__ = __parent__ = None
+
+    def __init__(self, request=None):
         pass
+
+    def __getitem__(self, user_name):
+        from .user import User
+
+        o = DBSession.query(User).filter(User.name == user_name).first()
+        if o is None:
+            raise KeyError(user_name)
+        return o
+
+
+root = Root()

@@ -26,12 +26,21 @@ class Project(Base, IdMixin):
                                           ondelete="cascade"),
                       nullable=False)
 
-    owner = relationship("User", backref="projects")
+    owner = relationship("User", backref=backref("projects", lazy="dynamic"),
+                         lazy="joined")
 
     __table_args__ = (
         Index("project_owner_id_lower_name", owner_id, func.lower(name),
               unique=True),
     )
+
+    @property
+    def __name__(self):
+        return self.name
+
+    @property
+    def __parent__(self):
+        return self.owner
 
     @property
     def __acl__(self):
@@ -58,7 +67,7 @@ class ProjectACLEntry(Base):
                                             ondelete="cascade"),
                         nullable=False)
 
-    project = relationship("Project", backref=backref("acl", lazy="joined"))
+    project = relationship("Project", backref=backref("acl"))
 
     user_id = Column(Integer, ForeignKey("users.id",
                                          onupdate="cascade",
