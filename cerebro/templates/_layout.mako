@@ -12,6 +12,9 @@
         % endfor
     </head>
     <body>
+        <form method="POST" action="/logout">
+            <button type="submit">Logout</button>
+        </form>
         ${self.body()}
 
         % for url in webassets(request, \

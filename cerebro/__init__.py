@@ -8,7 +8,7 @@ from pyramid_beaker import session_factory_from_settings
 
 from .auth import identity_for_request, request_has_permission, \
                   DBAuthenticationPolicy
-from .models import DBSession, Base, Root
+from .models import DBSession, Base, root
 
 
 def main(global_config, **settings):
@@ -18,7 +18,7 @@ def main(global_config, **settings):
     DBSession.configure(bind=engine)
     Base.metadata.bind = engine
 
-    config = Configurator(settings=settings, root_factory=Root)
+    config = Configurator(settings=settings, root_factory=lambda request: root)
 
     session_factory = session_factory_from_settings(settings)
     config.set_session_factory(session_factory)

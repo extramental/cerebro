@@ -55,6 +55,12 @@ class Project(Base, IdMixin):
 
         return acl
 
+    def __getitem__(self, doc_name):
+        o = self.docs.filter(Doc.name == doc_name).first()
+        if o is None:
+            raise KeyError(doc_name)
+        return o
+
 
 class ProjectACLEntry(Base):
     __tablename__ = "project_acl"
@@ -177,7 +183,16 @@ class Doc(Base, IdMixin):
                                             ondelete="cascade"),
                         nullable=False)
 
-    project = relationship("Project", backref="docs")
+    project = relationship("Project", backref=backref("docs", lazy="dynamic"),
+                           lazy="joined")
+
+    @property
+    def __name__(self):
+        return self.name
+
+    @property
+    def __parent__(self):
+        return self.owner
 
     @property
     def __acl__(self):

@@ -99,9 +99,6 @@ class PGCompositeType(UserDefinedType):
 class Root(object):
     __name__ = __parent__ = None
 
-    def __init__(self, request=None):
-        pass
-
     def __getitem__(self, user_name):
         from .user import User
 
