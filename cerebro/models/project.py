@@ -198,6 +198,17 @@ class TreeRevision(Base, TimestampMixin):
             self.__parent__ = parent
             self.tree = tree
             self.index = index
+            self.doc_revision = DBSession.query(DocRevision) \
+                .filter(
+                    DocRevision.doc_id == tree["n"],
+                    DocRevision.doc_rev == tree["r"]) \
+                .one()
+
+        def __getattr__(self, k):
+            return getattr(self.doc_revision, k)
+
+        def __setattr__(self, k, v):
+            return setattr(self.doc_revision, k, v)
 
         def __getitem__(self, i):
             return TreeRevision.DocProxy(self, self.tree["c"][i], i)
