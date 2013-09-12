@@ -208,7 +208,9 @@ class TreeRevision(Base, TimestampMixin):
             return getattr(self.doc_revision, k)
 
         def __setattr__(self, k, v):
-            return setattr(self.doc_revision, k, v)
+            if hasattr(self.doc_revision, k):
+                return setattr(self.doc_revision, k, v)
+            return super(DocProxy, self).__setattr__(k, v)
 
         def __getitem__(self, i):
             return TreeRevision.DocProxy(self, self.tree["c"][i], i)
