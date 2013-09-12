@@ -198,14 +198,16 @@ class TreeRevision(Base, TimestampMixin):
             # TODO: we can lazy load the document when we get to the end of the
             #       traversal by using get_subtree_at_path... but let's not
             #       bother with it right now.
-            self.__parent__ = parent
-            self.tree = tree
-            self.index = index
-            self.doc_revision = DBSession.query(DocRevision) \
+            doc_revision = DBSession.query(DocRevision) \
                 .filter(
                     DocRevision.doc_id == tree["n"],
                     DocRevision.doc_rev == tree["r"]) \
                 .one()
+            Super(DocProxy, self).__setattr__("doc_revision", doc_revision)
+
+            self.parent = parent
+            self.tree = tree
+            self.index = index
 
         def __getattr__(self, k):
             return getattr(self.doc_revision, k)
@@ -216,8 +218,13 @@ class TreeRevision(Base, TimestampMixin):
             return super(DocProxy, self).__setattr__(k, v)
 
         def __getitem__(self, i):
+            # remove the trailing slug, if any
             i, _, _ = i.partition("-")
             return TreeRevision.DocProxy(self, self.tree["c"][i], i)
+
+        @property
+        def __parent__(self):
+            return self.parent
 
         @property
         def __name__(self):
