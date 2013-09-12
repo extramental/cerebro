@@ -30,6 +30,29 @@ class Project(Base, IdMixin):
     owner = relationship("User", backref=backref("projects", lazy="dynamic"),
                          lazy="joined")
 
+    class DocContainer(object):
+        __name__ = "docs"
+
+        def __init__(self, project):
+            self.project = project
+
+        @property
+        def __parent__(self):
+            return self.project
+
+        def __getitem__(self, tree_rev):
+            if tree_rev == "latest":
+                o = self.project.tree_revisions.order_by(desc(TreeRevision.tree_rev)).first()
+            else:
+                o = self.project.tree_revisions.filter(TreeRevision.tree_rev == tree_rev).first()
+            if o is None:
+                raise KeyError(tree_rev)
+            return TreeRevision.DocProxy(self, o.tree, tree_rev)
+
+    @property
+    def doc_container(self):
+        return Project.DocContainer(self)
+
     __table_args__ = (
         Index("project_owner_id_lower_name", owner_id, func.lower(name),
               unique=True),
@@ -56,11 +79,10 @@ class Project(Base, IdMixin):
 
         return acl
 
-    def __getitem__(self, doc_name):
-        o = self.docs.filter(Doc.name == doc_name).first()
-        if o is None:
-            raise KeyError(doc_name)
-        return o
+    def __getitem__(self, child):
+        if child == "docs":
+            return self.doc_container
+        raise KeyError
 
 
 class ProjectACLEntry(Base):
@@ -123,7 +145,8 @@ class TreeRevision(Base, TimestampMixin):
                                             ondelete="cascade"),
                         nullable=False)
 
-    project = relationship("Project", backref="tree_revisions")
+    project = relationship("Project", backref=backref("tree_revisions",
+                                                      lazy="dynamic"))
 
     tree_rev = Column(Integer, nullable=False)
 
@@ -165,6 +188,23 @@ class TreeRevision(Base, TimestampMixin):
             DocRevision.doc_id == q.c.doc_revs.doc_id,
             ((DocRevision.doc_rev == None) & not_(DocRevision.frozen)) |
                 (DocRevision.doc_rev == q.c.doc_revs.doc_rev))
+
+    class DocProxy(object):
+        """
+        This enables access of docs inside a tree via a traversal-compatible
+        interface.
+        """
+        def __init__(self, parent, tree, index):
+            self.__parent__ = parent
+            self.tree = tree
+            self.index = index
+
+        def __getitem__(self, i):
+            return TreeRevision.DocProxy(self, self.tree["c"][i], i)
+
+        @property
+        def __name__(self):
+            return self.index
 
 
 class Doc(Base, IdMixin):
