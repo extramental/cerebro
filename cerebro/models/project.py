@@ -79,10 +79,10 @@ class Project(Base, IdMixin):
 
         return acl
 
-    def __getitem__(self, child):
-        if child == "docs":
-            return self.doc_container
-        raise KeyError
+    def __getitem__(self, key):
+        return {
+            "docs": self.doc_container
+        }[key]
 
 
 class ProjectACLEntry(Base):
