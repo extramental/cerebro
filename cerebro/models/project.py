@@ -216,6 +216,7 @@ class TreeRevision(Base, TimestampMixin):
             return super(DocProxy, self).__setattr__(k, v)
 
         def __getitem__(self, i):
+            i, _, _ = i.partition("-")
             return TreeRevision.DocProxy(self, self.tree["c"][i], i)
 
         @property
