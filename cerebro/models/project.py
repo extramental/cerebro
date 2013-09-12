@@ -195,6 +195,9 @@ class TreeRevision(Base, TimestampMixin):
         interface.
         """
         def __init__(self, parent, tree, index):
+            # TODO: we can lazy load the document when we get to the end of the
+            #       traversal by using get_subtree_at_path... but let's not
+            #       bother with it right now.
             self.__parent__ = parent
             self.tree = tree
             self.index = index
