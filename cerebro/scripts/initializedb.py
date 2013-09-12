@@ -78,11 +78,38 @@ $$
             doc_rev: v.r
         });
         v.c.forEach(function (k) {
-            q.push(k)
+            q.push(k);
         });
     }
 
     return acc;
+$$;
+
+CREATE FUNCTION get_path_for_doc (j json, doc_id integer)
+    RETURNS integer array
+    LANGUAGE plv8
+    IMMUTABLE
+AS
+$$
+    var q = [[j]];
+    var path;
+
+    while (q.length > 0) {
+        path = q.pop();
+        var tail = path[path.length - 1];
+
+        if (tail.d == doc_id) {
+            return path.map(function (v) {
+                return v.d;
+            });
+        }
+
+        tail.c.forEach(function (k) {
+            q.push(path.concat(k));
+        });
+    }
+
+    return null;
 $$;
 """)
     Base.metadata.create_all(engine)

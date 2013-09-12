@@ -2,6 +2,7 @@ from sqlalchemy import *
 from sqlalchemy.dialects.postgresql import *
 from sqlalchemy.sql.expression import *
 from sqlalchemy.orm import *
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 
 from pyramid.security import Allow, Everyone
 
@@ -197,16 +198,6 @@ class Doc(Base, IdMixin):
 
     project = relationship("Project", backref=backref("docs", lazy="dynamic"),
                            lazy="joined")
-
-    @property
-    def __name__(self):
-        # TODO: need to scan the tree for this index
-        raise NotImplementedError
-
-    @property
-    def __parent__(self):
-        # TODO: need to scan the tree for a parent
-        raise NotImplementedError
 
     @property
     def __acl__(self):
