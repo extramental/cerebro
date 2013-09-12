@@ -173,10 +173,22 @@ class Doc(Base, IdMixin):
 
     Document IDs are global across the whole system, i.e. all document IDs are
     associated with exactly one project.
+
+    Documents have a URL of the following form:
+
+        /<user_name>/<project_name>/<revision or "latest">/docs/#-<slug>/#-<slug>/...
+
+    e.g.
+
+        /tolkein/lotr/docs/latest/2-two-towers/3-treason-of-isengard/11-palantir
+
+    The slugs are redundant and used only for SEO, i.e. the URL could just as
+    correctly be represented as:
+
+        /tolkein/lotr/docs/latest/2/3/11
+
     """
     __tablename__ = "docs"
-
-    name = Column(String, nullable=False)
 
     project_id = Column(Integer, ForeignKey("projects.id",
                                             onupdate="cascade",
@@ -188,11 +200,13 @@ class Doc(Base, IdMixin):
 
     @property
     def __name__(self):
-        return self.name
+        # TODO: need to scan the tree for this index
+        raise NotImplementedError
 
     @property
     def __parent__(self):
-        return self.owner
+        # TODO: need to scan the tree for a parent
+        raise NotImplementedError
 
     @property
     def __acl__(self):
