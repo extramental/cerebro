@@ -47,7 +47,7 @@ class Project(Base, IdMixin):
                 o = self.project.tree_revisions.filter(TreeRevision.tree_rev == tree_rev).first()
             if o is None:
                 raise KeyError(tree_rev)
-            return TreeRevision.DocProxy(self, o.tree, tree_rev)
+            return TreeRevision.DocRevisionProxy(self, o.tree, tree_rev)
 
     @property
     def doc_container(self):
@@ -189,7 +189,7 @@ class TreeRevision(Base, TimestampMixin):
             ((DocRevision.doc_rev == None) & not_(DocRevision.frozen)) |
                 (DocRevision.doc_rev == q.c.doc_revs.doc_rev))
 
-    class DocProxy(object):
+    class DocRevisionProxy(object):
         """
         This enables access of docs inside a tree via a traversal-compatible
         interface.
@@ -203,7 +203,7 @@ class TreeRevision(Base, TimestampMixin):
                     DocRevision.doc_id == tree["n"],
                     DocRevision.doc_rev == tree["r"]) \
                 .one()
-            Super(DocProxy, self).__setattr__("doc_revision", doc_revision)
+            Super(DocRevisionProxy, self).__setattr__("doc_revision", doc_revision)
 
             self.parent = parent
             self.tree = tree
@@ -215,12 +215,14 @@ class TreeRevision(Base, TimestampMixin):
         def __setattr__(self, k, v):
             if hasattr(self.doc_revision, k):
                 return setattr(self.doc_revision, k, v)
-            return super(DocProxy, self).__setattr__(k, v)
+            return super(DocRevisionProxy, self).__setattr__(k, v)
 
-        def __getitem__(self, i):
+        def __getitem__(self, k):
             # remove the trailing slug, if any
-            i, _, _ = i.partition("-")
-            return TreeRevision.DocProxy(self, self.tree["c"][i], i)
+            i, _, _ = k.partition("-")
+            if not i.isdigit():
+                raise KeyError(k)
+            return TreeRevision.DocRevisionProxy(self, self.tree["c"][i], i)
 
         @property
         def __parent__(self):
